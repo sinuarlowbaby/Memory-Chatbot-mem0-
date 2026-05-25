@@ -10,11 +10,35 @@ load_dotenv()
 mem0_config = {
     "vector_store": {
         "provider": "qdrant",
+        "enabled": True,
         "config": {
-            "collection_name": "mem0_chatbot_db",
-            "url": os.getenv("QDRANT_URL")
+            "url": os.getenv("QDRANT_URL"),
+            "collection_name": "mem0_chatbot_db"
         }
-    }
+    },
+    "llm": {
+        "model": "gpt-4o",
+        "temperature":0.5,
+        "stream": True,
+        "api_key": os.getenv("OPENAI_API_KEY")
+    },
+    "embedding": {
+        "model": "text-embedding-3-small",
+        "provider": "openai",
+        "strip_accents": True,
+        "normalize_embeddings": True,
+        "batch_size": 1024,
+        "api_key": os.getenv("OPENAI_API_KEY")
+    },
+    "cache": {
+        "provider": "redis",
+        "enabled": True,
+        "ttl_seconds": 60*60*24*7, # 7 days
+
+        "config": {
+            "url": os.getenv("REDIS_URL")
+        }
+    },
 }
 
 # 3. Initialize the Memory instance globally
