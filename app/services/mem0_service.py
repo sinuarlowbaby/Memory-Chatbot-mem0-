@@ -13,7 +13,8 @@ mem0_config = {
         "enabled": True,
         "config": {
             "url": os.getenv("QDRANT_URL"),
-            "collection_name": "mem0_chatbot_db"
+            "collection_name": "mem0_chatbot_db",
+            "api_key": os.getenv("QDRANT__SERVICE__API_KEY")
         }
     },
     "llm": {

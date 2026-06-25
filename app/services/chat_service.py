@@ -35,7 +35,7 @@ Answer:
     return ai_response
 
 
-@traceable(run_type="mem0", name="save_chat_memory")
+@traceable(run_type="tool", name="save_chat_memory")
 def save_chat_memory(user_query: str, ai_response: str, session_id: str):
     # 4. Save both user query and assistant response to memory
     memory.add(
