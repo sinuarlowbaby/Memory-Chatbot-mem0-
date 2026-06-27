@@ -11,10 +11,10 @@ openai_client = AsyncOpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 redis_client = redis.from_url(os.getenv("REDIS_URL"), decode_responses=True)
 
 @traceable(run_type="llm", name="get_chat_response")
-async def get_chat_response(user_query: str, session_id: str) -> str:
+async def get_chat_response(user_query: str, session_id: str, model: str = "gpt-4o") -> str:
     # 1. Search for relevant memories
 
-    cache_key = get_cache_key_sha256(user_query, session_id)
+    cache_key = get_cache_key_sha256(user_query, session_id, model=model)
     
     try:
         cached_response = redis_client.get(cache_key)
@@ -41,7 +41,7 @@ async def get_chat_response(user_query: str, session_id: str) -> str:
     
     # 3. Get response from OpenAI
     response = await openai_client.chat.completions.create(
-        model="gpt-4o",
+        model=model,
         messages=[
             {"role": "user", "content": prompt}
         ],
@@ -49,16 +49,16 @@ async def get_chat_response(user_query: str, session_id: str) -> str:
     ai_response = response.choices[0].message.content
 
     try:
-        redis_client.setex(cache_key, 60 * 60 * 24 * 7, ai_response)
-        print("Response cached in Redis for 1 week.")
+        redis_client.setex(cache_key, 60 * 60, ai_response)
+        print("Response cached in Redis for 1 hour.")
     except Exception as e:
         print(f"Error caching response: {e}")
     
-    return ai_response
+    return ai_response 
 
 
 @traceable(run_type="tool", name="save_chat_memory")
-def save_chat_memory(user_query: str, ai_response: str, session_id: str):
+def save_chat_memory(user_query: str, ai_response: str, session_id: str, model: str = "gpt-4o"):
     # 4. Save both user query and assistant response to memory
     try:
         memory.add(
@@ -69,6 +69,7 @@ def save_chat_memory(user_query: str, ai_response: str, session_id: str):
             user_id=session_id,
             metadata= {
                 "session_id": session_id,
+                "model": model,
                 "source": "chat",
                 "message_type": "conversation",
                 "timestamp": datetime.now().isoformat(),
